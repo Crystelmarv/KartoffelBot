@@ -42,6 +42,7 @@ public class GlobalCommandRegistrar implements ApplicationRunner {
 
 		// These are commands already registered with discord from previous runs of the
 		// bot.
+		
 		Map<String, ApplicationCommandData> discordCommands = applicationService
 				.getGlobalApplicationCommands(applicationId).collectMap(ApplicationCommandData::name).block();
 
@@ -67,7 +68,6 @@ public class GlobalCommandRegistrar implements ApplicationRunner {
 			long discordCommandId = Long.parseLong(discordCommand.id());
 
 			ApplicationCommandRequest command = commands.get(discordCommand.name());
-			System.out.println(discordCommand.name());
 			if (command == null) {
 				// Removed command.json, delete global command
 				applicationService.deleteGlobalApplicationCommand(applicationId, discordCommandId).block();
