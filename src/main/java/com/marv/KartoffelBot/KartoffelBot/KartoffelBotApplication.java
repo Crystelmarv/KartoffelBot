@@ -15,15 +15,20 @@ import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBu
 import discord4j.common.util.Snowflake;
 import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
+import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
+import discord4j.gateway.GatewayClient;
 import discord4j.rest.RestClient;
 import discord4j.voice.AudioProvider;
+import lombok.Setter;
 import reactor.core.publisher.Mono;
 
 @SpringBootApplication
 public class KartoffelBotApplication {
 
 	static ApplicationContext springContext;
+	
+	public static GatewayDiscordClient ga;
 
 	public static void main(String[] args) {
 		springContext = new SpringApplicationBuilder(KartoffelBotApplication.class).build().run();
@@ -33,6 +38,7 @@ public class KartoffelBotApplication {
 			SlashCommandListener slashCommandListener = new SlashCommandListener(springContext);
 			Mono<Void> onSlashCommandMono = gatewayClient
 					.on(ChatInputInteractionEvent.class, slashCommandListener::handle).then();
+			ga = gatewayClient;
 			return Mono.when(onSlashCommandMono);
 		}).block();
 

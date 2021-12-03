@@ -1,10 +1,9 @@
 package com.marv.KartoffelBot.KartoffelBot.listerns;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.springframework.scheduling.annotation.Scheduled;
-
+import com.marv.KartoffelBot.KartoffelBot.KartoffelBotApplication;
 import com.marv.KartoffelBot.KartoffelBot.LavaPlayerAudioProvider;
 import com.marv.KartoffelBot.KartoffelBot.TrackScheduler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
@@ -13,12 +12,15 @@ import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBuffer;
 
+import discord4j.common.util.Snowflake;
+import discord4j.core.DiscordClient;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.VoiceState;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.channel.VoiceChannel;
 import discord4j.voice.AudioProvider;
+import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 
 public class MessageListener {
@@ -27,6 +29,10 @@ public class MessageListener {
 	TrackScheduler scheduler;
 	boolean correct1 = false;
 	boolean correct0 = false;
+	
+	Snowflake guildId;
+
+	HashMap<Snowflake, Integer> scoreBoard = new HashMap<Snowflake, Integer>();
 
 	public Mono<Void> handle(ChatInputInteractionEvent event) {
 		return null;
@@ -34,6 +40,7 @@ public class MessageListener {
 
 	public MessageListener(ChatInputInteractionEvent ev) {
 
+		guildId = ev.getInteraction().getGuildId().get();
 		// LavaPlayer
 		// Creates AudioPlayer instances and translates URLs to AudioTrack instances
 		final AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
@@ -88,6 +95,11 @@ public class MessageListener {
 						resetCorrectVars();
 						scheduler.nextSongInSongList();
 					}
+					else if(content.equals("?score"))
+					{
+						event.getMessage().getChannel()
+						.subscribe(che -> che.createMessage("Scoreboard:" + System.lineSeparator() + getScoreboardAsString()).subscribe());
+					}
 
 					// Quiz Guess
 					
@@ -105,11 +117,13 @@ public class MessageListener {
 					if (inputString.equalsIgnoreCase(compareString) && correct0 == false) {
 						correct0 = true;
 						System.out.println("KORRECT");
+						addPointToScorboad(event.getMember().get().getId());
 						event.getMessage().getChannel()
 								.subscribe(che -> che.createMessage(correctAnswer[0] + " IST RICHTIG").subscribe());
 					} else if (inputString.equalsIgnoreCase(compareString2) && correct1 == false) {
 						correct1 = true;
 						System.out.println("KORRECT");
+						addPointToScorboad(event.getMember().get().getId());
 						event.getMessage().getChannel()
 								.subscribe(che -> che.createMessage(correctAnswer[1] + " IST RICHTIG").subscribe());
 					}
@@ -117,7 +131,7 @@ public class MessageListener {
 					if(correct0 && correct1)
 					{
 						event.getMessage().getChannel()
-						.subscribe(che -> che.createMessage("Das war: " + correctAnswer[0] + " - " + correctAnswer[1]).subscribe());
+						.subscribe(che -> che.createMessage("DAS WAR: " + correctAnswer[0] + " - " + correctAnswer[1]).subscribe());
 						resetCorrectVars();
 						scheduler.nextSongInSongList();
 					}
@@ -128,9 +142,33 @@ public class MessageListener {
 
 		});
 	}
-	
-	private void resetCorrectVars()
+
+	private String getScoreboardAsString()
 	{
+		String returnString = "";
+		for(Snowflake snowflake : scoreBoard.keySet()) {
+			Mono<Member> member = KartoffelBotApplication.ga.getMemberById(guildId, snowflake);
+			var wrapper = new Object(){ String displayName = ""; };
+			member.subscribe(s->{
+			  wrapper.displayName = s.getDisplayName();
+			});
+			returnString = returnString +  wrapper.displayName + ": " + scoreBoard.get(snowflake) + System.lineSeparator();
+	
+		}
+		return returnString;
+	}
+	
+	private void addPointToScorboad(Snowflake snowflake) {
+		if (scoreBoard.containsKey(snowflake)) {
+			int i = scoreBoard.get(snowflake);
+			i++;
+			scoreBoard.put(snowflake, i);
+		} else {
+			scoreBoard.put(snowflake, 1);
+		}
+	}
+
+	private void resetCorrectVars() {
 		correct0 = false;
 		correct1 = false;
 	}
