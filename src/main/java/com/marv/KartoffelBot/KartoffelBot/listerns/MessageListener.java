@@ -3,6 +3,8 @@ package com.marv.KartoffelBot.KartoffelBot.listerns;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.scheduling.annotation.Scheduled;
+
 import com.marv.KartoffelBot.KartoffelBot.LavaPlayerAudioProvider;
 import com.marv.KartoffelBot.KartoffelBot.TrackScheduler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
@@ -20,6 +22,9 @@ import discord4j.voice.AudioProvider;
 import reactor.core.publisher.Mono;
 
 public class MessageListener {
+	
+	boolean musicQuizStarted = false;
+	TrackScheduler scheduler;
 
 	public Mono<Void> handle(ChatInputInteractionEvent event) {
 		return null;
@@ -49,22 +54,36 @@ public class MessageListener {
 
 				final String content = event.getMessage().getContent();
 				System.out.println(content);
-
-				final Member member = event.getMember().orElse(null);
-				if (member != null) {
-					final VoiceState voiceState = member.getVoiceState().block();
-					if (voiceState != null) {
-						final VoiceChannel channel = voiceState.getChannel().block();
-						if (channel != null) {
-							// join returns a VoiceConnection which would be required if we were
-							// adding disconnection features, but for now we are just ignoring it.
-							channel.join(spec -> spec.setProvider(provider)).block();
+				if (musicQuizStarted == false && content.contains("https")) {
+					System.out.println("DD");
+					final Member member = event.getMember().orElse(null);
+					if (member != null) {
+						final VoiceState voiceState = member.getVoiceState().block();
+						if (voiceState != null) {
+							final VoiceChannel channel = voiceState.getChannel().block();
+							if (channel != null) {
+								// join returns a VoiceConnection which would be required if we were
+								// adding disconnection features, but for now we are just ignoring it.
+								channel.join(spec -> spec.setProvider(provider)).block();
+							}
 						}
 					}
+					scheduler = new TrackScheduler(player);
+					
+					playerManager.loadItem(content, scheduler);
+					musicQuizStarted = true;
 				}
-				final TrackScheduler scheduler = new TrackScheduler(player);
+				else
+				{
+					if(content.equals("?skip"))
+					{
+						scheduler.nextSongInSongList();
+					}
+					
+					//Quiz Guess
+					
+				}
 
-				playerManager.loadItem(content, scheduler);
 			}
 
 		});
