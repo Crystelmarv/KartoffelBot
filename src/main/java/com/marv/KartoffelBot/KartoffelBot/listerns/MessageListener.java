@@ -22,9 +22,11 @@ import discord4j.voice.AudioProvider;
 import reactor.core.publisher.Mono;
 
 public class MessageListener {
-	
+
 	boolean musicQuizStarted = false;
 	TrackScheduler scheduler;
+	boolean correct1 = false;
+	boolean correct0 = false;
 
 	public Mono<Void> handle(ChatInputInteractionEvent event) {
 		return null;
@@ -69,23 +71,107 @@ public class MessageListener {
 						}
 					}
 					scheduler = new TrackScheduler(player);
-					
+
 					playerManager.loadItem(content, scheduler);
 					musicQuizStarted = true;
-				}
-				else
-				{
-					if(content.equals("?skip"))
-					{
+				} else if (musicQuizStarted == true) {
+					String[] correctAnswer = formatRight(scheduler.getCurrentSong().getInfo().title);
+					
+					if (content.equals("?skip")) {
+						
+						event.getMessage().getChannel()
+						.subscribe(che -> che.createMessage("SKIPPE DEN SONG!").subscribe());
+						
+						event.getMessage().getChannel()
+						.subscribe(che -> che.createMessage("Das war: " + correctAnswer[0] + " - " + correctAnswer[1]).subscribe());
+						
+						resetCorrectVars();
 						scheduler.nextSongInSongList();
 					}
+
+					// Quiz Guess
 					
-					//Quiz Guess
+//					System.out.println(content.toLowerCase() + "  " + correctAnswer[0].toLowerCase());
+//					System.out.println(correct0);
+
+					String inputString = content.toString().replaceAll("\\P{Print}", "");
+					String compareString = correctAnswer[0].toString().replaceAll("\\P{Print}", "");
+					String compareString2 = correctAnswer[1].toString().replaceAll("\\P{Print}", "");
+
+					inputString = inputString.trim();
+					compareString = compareString.trim();
+					compareString2 = compareString2.trim();
+
+					if (inputString.equalsIgnoreCase(compareString) && correct0 == false) {
+						correct0 = true;
+						System.out.println("KORRECT");
+						event.getMessage().getChannel()
+								.subscribe(che -> che.createMessage(correctAnswer[0] + " IST RICHTIG").subscribe());
+					} else if (inputString.equalsIgnoreCase(compareString2) && correct1 == false) {
+						correct1 = true;
+						System.out.println("KORRECT");
+						event.getMessage().getChannel()
+								.subscribe(che -> che.createMessage(correctAnswer[1] + " IST RICHTIG").subscribe());
+					}
 					
+					if(correct0 && correct1)
+					{
+						event.getMessage().getChannel()
+						.subscribe(che -> che.createMessage("Das war: " + correctAnswer[0] + " - " + correctAnswer[1]).subscribe());
+						resetCorrectVars();
+						scheduler.nextSongInSongList();
+					}
+
 				}
 
 			}
 
 		});
+	}
+	
+	private void resetCorrectVars()
+	{
+		correct0 = false;
+		correct1 = false;
+	}
+
+	private String[] formatRight(String title) {
+		String teil = title;
+		String[] formated = new String[2];
+		int i = teil.indexOf("(");
+		if (i > 0) {
+			teil = teil.substring(0, teil.indexOf("("));
+		}
+		i = teil.indexOf("[");
+		if (i > 0) {
+			teil = teil.substring(0, teil.indexOf("["));
+		}
+		teil = teil.replace("\"", "");
+		teil = teil.replace("'", "");
+		if (teil.contains("M/V")) {
+			teil = teil.replace("M/V", "");
+		}
+		if (teil.contains("Lyrics")) {
+			teil = teil.replace("Lyrics", "");
+		}
+
+		String[] teile = teil.split("-");
+
+		for (int j = 0; j < 2; j++) {
+			if (teile.length == 1) {
+				String[] teile2 = teil.split("–");
+				if (teile2[j].charAt(0) == ' ') {
+					teile2[j] = teile2[j].replaceFirst(" ", "");
+				}
+				formated[j] = teile2[j];
+			} else {
+				if (teile[j].charAt(0) == ' ') {
+					teile[j] = teile[j].replaceFirst(" ", "");
+				}
+				formated[j] = teile[j];
+			}
+
+		}
+		return formated;
 	}
 }

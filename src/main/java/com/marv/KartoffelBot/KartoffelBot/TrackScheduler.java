@@ -1,5 +1,6 @@
 package com.marv.KartoffelBot.KartoffelBot;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -9,12 +10,17 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
+import lombok.Getter;
+
 public final class TrackScheduler implements AudioLoadResultHandler {
 
     private final AudioPlayer player;
     private List<AudioTrack> songList;
-    private AudioTrack currentSong;
     
+    @Getter
+    private AudioTrack currentSong;
+    List<String> stringVorne = new ArrayList<>();
+    List<String> stringHinten = new ArrayList<>();
 
     public TrackScheduler(final AudioPlayer player) {
         this.player = player;
@@ -31,6 +37,21 @@ public final class TrackScheduler implements AudioLoadResultHandler {
     	// LavaPlayer found multiple AudioTracks from some playlist
     	System.out.println("PLAYLIST FOUND");
     	songList = playlist.getTracks();
+    	
+    	for(AudioTrack track : songList)
+    	{
+    		
+    		String teil = track.getInfo().title;
+    		
+    		
+    	}
+    	for(String s : stringVorne)
+    	{
+    	System.out.println(s);	
+    	}
+    	
+    	
+    	
     	nextSongInSongList();
     	
     	
