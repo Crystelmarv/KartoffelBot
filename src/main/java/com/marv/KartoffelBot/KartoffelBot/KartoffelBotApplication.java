@@ -32,10 +32,6 @@ public class KartoffelBotApplication {
 
 	public static void main(String[] args) {
 		springContext = new SpringApplicationBuilder(KartoffelBotApplication.class).build().run();
-
-		//Spotify Test
-		Spotify sp = new Spotify();
-		sp.getSomething_Sync();
 		
 		// Login
 		DiscordClientBuilder.create(System.getenv("bot.token")).build().withGateway(gatewayClient -> {

@@ -9,9 +9,12 @@ import com.neovisionaries.i18n.CountryCode;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.credentials.ClientCredentials;
-import se.michaelthelin.spotify.model_objects.specification.Playlist;
+import se.michaelthelin.spotify.model_objects.specification.Paging;
+import se.michaelthelin.spotify.model_objects.specification.PlaylistTrack;
+import se.michaelthelin.spotify.model_objects.specification.Track;
 import se.michaelthelin.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
-import se.michaelthelin.spotify.requests.data.playlists.GetPlaylistRequest;
+import se.michaelthelin.spotify.requests.data.playlists.GetPlaylistsItemsRequest;
+import se.michaelthelin.spotify.requests.data.tracks.GetTrackRequest;
 
 public class Spotify {
 	private static final SpotifyApi spotifyApi = new SpotifyApi.Builder()
@@ -32,19 +35,33 @@ public class Spotify {
 		}
 	}
 
-	void getSomething_Sync() {
+	public PlaylistTrack[] getTracksFromPlaylist() {
 		try {
-			// Execute the request synchronous
-			// Create a request object with the optional parameter "market"
-			GetPlaylistRequest getSomethingRequest = spotifyApi.getPlaylist("5Uulh7HBve8RJbJPsteXsm")
+			GetPlaylistsItemsRequest getSomethingRequest = spotifyApi.getPlaylistsItems("37i9dQZF1DX26MMm9GTjCc")
 					.market(CountryCode.DE).build();
-			final Playlist something = getSomethingRequest.execute();
 
-			// Print something's name
-			System.out.println("Name: " + something.getName());
+			// TODO look in paging so realy every track could be picked
+			final Paging<PlaylistTrack> some = getSomethingRequest.execute();
+			System.out.println(some.getLimit());
+
+			PlaylistTrack playListTracks[] = some.getItems();
+
+			return playListTracks;
+
 		} catch (Exception e) {
 			System.out.println("Something went wrong!\n" + e.getMessage());
 		}
+		return null;
+	}
+
+	public TrackInfo getTrackInfos(PlaylistTrack playlistTrack)
+			throws ParseException, SpotifyWebApiException, IOException {
+		String songid = playlistTrack.getTrack().getId();
+
+		GetTrackRequest getTrackRequst = spotifyApi.getTrack(songid).build();
+		Track track = getTrackRequst.execute();
+		TrackInfo trackInfo = new TrackInfo(track.getArtists(), track.getName());
+		return trackInfo;
 	}
 
 }
