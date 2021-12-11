@@ -1,10 +1,14 @@
 package com.marv.KartoffelBot.KartoffelBot;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.marv.KartoffelBot.KartoffelBot.listerns.SlashCommandListener;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -30,9 +34,11 @@ public class KartoffelBotApplication {
 	
 	public static GatewayDiscordClient ga;
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws GoogleJsonResponseException, GeneralSecurityException, IOException {
 		springContext = new SpringApplicationBuilder(KartoffelBotApplication.class).build().run();
 		
+		//Youtbe Test
+		Youtube d = new Youtube();
 		// Login
 		DiscordClientBuilder.create(System.getenv("bot.token")).build().withGateway(gatewayClient -> {
 			SlashCommandListener slashCommandListener = new SlashCommandListener(springContext);
